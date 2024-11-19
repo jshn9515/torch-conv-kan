@@ -19,12 +19,24 @@
 # and https://github.com/zavareh1/Wav-KAN
 # and https://github.com/quiqi/relu_kan/issues/2
 
+import itertools
+
 from torch import Tensor
 import torch.nn as nn
 from typing import List, Callable, Optional
 
-from .kan_layers import KANLayer, KALNLayer, FastKANLayer, ChebyKANLayer, GRAMLayer, WavKANLayer, JacobiKANLayer, \
-    BernsteinKANLayer, ReLUKANLayer, BottleNeckGRAMLayer
+from .kan_layers import (
+    KANLayer,
+    KALNLayer,
+    FastKANLayer,
+    ChebyKANLayer,
+    GRAMLayer,
+    WavKANLayer,
+    JacobiKANLayer,
+    BernsteinKANLayer,
+    ReLUKANLayer,
+    BottleNeckGRAMLayer,
+)
 from ..utils import L1
 
 
@@ -59,7 +71,7 @@ class KAN(nn.Module):  # Kolmogorov Arnold Legendre Network (KAL-Net)
         self.base_activation = base_activation
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             layer = KANLayer(
                 in_features,
                 out_features,
@@ -103,7 +115,7 @@ class KALN(nn.Module):  # Kolmogorov Arnold Legendre Network (KAL-Net)
         self.base_activation = base_activation
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = KALNLayer(
                 in_features,
@@ -151,7 +163,7 @@ class FastKAN(nn.Module):
         if dropout > 0 and first_dropout:
             self.layers.append(nn.Dropout(p=dropout))
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = FastKANLayer(
                 in_features,
@@ -197,7 +209,7 @@ class KACN(nn.Module):  # Kolmogorov Arnold Legendre Network (KAL-Net)
             self.layers.append(nn.Dropout(p=dropout))
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = ChebyKANLayer(in_features, out_features, degree=degree)
             if l1_decay > 0 and i != self.num_layers - 1:
@@ -230,13 +242,13 @@ class KAGN(nn.Module):
         # polynomial_order: Order up to which Legendre polynomials are calculated
         self.polynomial_order = degree
         # list of layers
-        self.layers = nn.ModuleList([])
+        self.layers = nn.ModuleList()
         if dropout > 0 and first_dropout:
             self.layers.append(nn.Dropout(p=dropout))
         self.base_activation = base_activation
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = GRAMLayer(
                 in_features,
@@ -282,7 +294,7 @@ class BottleNeckKAGN(nn.Module):
         self.base_activation = base_activation
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = BottleNeckGRAMLayer(
                 in_features,
@@ -328,7 +340,7 @@ class KABN(nn.Module):
         self.base_activation = base_activation
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = BernsteinKANLayer(
                 in_features,
@@ -368,13 +380,13 @@ class KAJN(nn.Module):
         # polynomial_order: Order up to which Legendre polynomials are calculated
         self.polynomial_order = degree
         # list of layers
-        self.layers = nn.ModuleList([])
+        self.layers = nn.ModuleList()
         if dropout > 0 and first_dropout:
             self.layers.append(nn.Dropout(p=dropout))
         self.base_activation = base_activation
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = JacobiKANLayer(
                 in_features,
@@ -408,18 +420,18 @@ class WavKAN(nn.Module):
         super(WavKAN, self).__init__()  # Initialize the parent nn.Module class
 
         if wavelet_type not in ['mexican_hat', 'morlet', 'dog', 'meyer', 'shannon']:
-            TypeError(f'Unsupported wavelet type: {wavelet_type}')
+            raise TypeError(f'Unsupported wavelet type: {wavelet_type}')
         # hidden_layers: A list of integers specifying the number of neurons in each layer
         self.hidden_layers = hidden_layers
         # polynomial_order: Order up to which Legendre polynomials are calculated
         self.wavelet_type = wavelet_type
         # list of layers
-        self.layers = nn.ModuleList([])
+        self.layers = nn.ModuleList()
         if dropout > 0 and first_dropout:
             self.layers.append(nn.Dropout(p=dropout))
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = WavKANLayer(in_features, out_features, wavelet_type=wavelet_type)
             if l1_decay > 0 and i != self.num_layers - 1:
@@ -456,7 +468,7 @@ class ReLUKAN(nn.Module):
             self.layers.append(nn.Dropout(p=dropout))
         self.num_layers = len(hidden_layers[:-1])
 
-        for i, (in_features, out_features) in enumerate(zip(hidden_layers[:-1], hidden_layers[1:])):
+        for i, (in_features, out_features) in enumerate(itertools.pairwise(hidden_layers)):
             # Base weight for linear transformation in each layer
             layer = ReLUKANLayer(
                 in_features,
