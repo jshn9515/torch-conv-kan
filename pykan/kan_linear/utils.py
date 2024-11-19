@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 import torch.nn as nn
+from typing import Optional
 
 
 class RadialBasisFunction(nn.Module):
@@ -9,7 +10,7 @@ class RadialBasisFunction(nn.Module):
             grid_min: float = -2.,
             grid_max: float = 2.,
             num_grids: int = 8,
-            denominator: float = None  # larger denominators lead to smoother basis
+            denominator: Optional[float] = None  # larger denominators lead to smoother basis
     ):
         super().__init__()
         grid = torch.linspace(grid_min, grid_max, num_grids)

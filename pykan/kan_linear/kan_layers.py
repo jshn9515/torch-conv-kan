@@ -550,11 +550,10 @@ class ReLUKANLayer(nn.Module):
         x = x[..., None]
         x1 = torch.relu(x - self.phase_low)
         x2 = torch.relu(self.phase_high - x)
-        x = x1 * x2 * self.r
-        x = x * x
-        x = x.reshape((len(x), 1, self.g + self.k, self.input_size))
+        x = x * x1 * x2 * self.r
+        x = x.reshape(len(x), 1, self.g + self.k, self.input_size)
         x = self.equal_size_conv(x)
-        x = x.reshape((len(x), self.output_size))
+        x = x.reshape(len(x), self.output_size)
         return x
 
 
